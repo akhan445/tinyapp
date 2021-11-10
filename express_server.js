@@ -68,6 +68,14 @@ app.get('/urls/:shortURL', (req, res) => {
   res.render('urls_show', templateVars);
 });
 
+app.post('/urls/:shortURL', (req, res) => {
+  const key = req.params.shortURL;
+  const newURL = req.body.longURL;
+  urlDatabase[key] = newURL;
+  const templateVars = { shortURL: key, longURL: newURL };
+  res.render('urls_show', templateVars);
+})
+
 
 
 app.listen(PORT, () => {
