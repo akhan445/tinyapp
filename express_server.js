@@ -21,10 +21,6 @@ function generateRandomString() {
   }
   return shortURL;
 };
-console.log(generateRandomString());
-console.log(generateRandomString());
-console.log(generateRandomString());
-console.log(generateRandomString());
 
 app.get('/', (req, res) => {
   res.send('Hello!');
@@ -44,7 +40,11 @@ app.get('/urls', (req, res) => {
 });
 
 app.post('/urls', (req, res) => {
-  console.log(req.body);
+  const shortURL = generateRandomString();
+  const longURL = req.body.longURL
+
+  urlDatabase[shortURL] = longURL;
+  
   res.send('OK');
 });
 
