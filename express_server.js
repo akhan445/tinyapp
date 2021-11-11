@@ -35,6 +35,15 @@ function findUserById(user_id) {
   return null;
 }
 
+function emailAlreadyExists(email) {
+  for (const key in users) {
+    console.log(users[key].email);
+    if (users[key].email === email) {
+      return true;
+    }
+  }
+  return false;
+}
 function generateRandomString() {
   const validChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let shortURL = '';
@@ -61,12 +70,18 @@ app.get('/hello', (req, res) => {
 app.get('/register', (req, res) => {
   //username
   const templateVars = {
-    username: req.cookies["username"],
+    user: req.cookies["user_id"],
   };
   res.render('urls_register', templateVars);
 });
 
 app.post('/register', (req, res) => {
+
+  if (!req.body.email || !req.body.password) {
+    return res.status(400).send('email or password fields cannot be empty');
+  } else if (emailAlreadyExists(req.body.email)) {
+    return res.status(400).send('email already exists in user db');
+  }
   const user_id = generateRandomString();
   const user = {
     id: user_id,
@@ -80,6 +95,7 @@ app.post('/register', (req, res) => {
   res.redirect('/urls');
 });
 
+// needs refactoring
 app.post('/login', (req, res) => {
   //username
   const username = req.body.username;
@@ -87,6 +103,7 @@ app.post('/login', (req, res) => {
   res.redirect('/urls');
 });
 
+//needs refactoring
 app.post('/logout', (req, res) => {
   res.clearCookie('username');
   res.redirect('/urls');
@@ -94,11 +111,11 @@ app.post('/logout', (req, res) => {
 
 app.get('/urls', (req, res) => {
   //username
+  // Buggy --> gives each user all urls in database
   const templateVars = { 
     user: findUserById(req.cookies["user_id"]),
     urls: urlDatabase
   };
-  console.log(templateVars)
   res.render('urls_index', templateVars);
 });
 
