@@ -36,6 +36,10 @@ app.get('/hello', (req, res) => {
   res.send('<html><body>Hello <b>World</b></body></html>\n');
 });
 
+app.get('/register', (req, res) => {
+  res.render('urls_register');
+});
+
 app.post('/login', (req, res) => {
   const username = req.body.username;
   res.cookie('username', username);
