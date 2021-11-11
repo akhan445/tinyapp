@@ -13,6 +13,19 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+};
+
 function generateRandomString() {
   const validChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let shortURL = '';
@@ -37,12 +50,29 @@ app.get('/hello', (req, res) => {
 });
 
 app.get('/register', (req, res) => {
-  res.render('urls_register');
+  const templateVars = {
+    username: req.cookies["username"],
+  };
+  res.render('urls_register', templateVars);
+});
+
+app.post('/register', (req, res) => {
+  const userID = generateRandomString();
+  const user = {
+    id: userID,
+    email: req.body.email,
+    password: req.body.password
+  };
+
+  users[userID] = user; 
+
+  res.cookie('user_id', userID); //set the cookie
+  res.redirect('/urls');
 });
 
 app.post('/login', (req, res) => {
   const username = req.body.username;
-  res.cookie('username', username);
+  res.cookie('username', username); // set the cookie
   res.redirect('/urls');
 });
 
