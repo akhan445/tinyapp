@@ -10,5 +10,33 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
+    <% if (!username) { %>
+    <form action="/login" method="POST">
+      <div class="form-row align-items-center form-control-lg">
+        <div class="col-auto">
+        </div>
+        <div class="col-auto">
+          <input type="text" class="form-control" name="username" placeholder="username">
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-outline-dark">Login</button>
+        </div>
+      </div>
+    </form>
+    <% } else { %>
+      <form action="/logout" method="POST">
+        <div class="form-row align-items-center form-control-lg">
+          <div class="col-auto">
+          </div>
+          <div class="col-auto">
+            <label class="my-1 mr-2">Logged in as: <%= username %></label>
+            <!-- <input type="text" class="form-control" name="username" placeholder="username"> -->
+          </div>
+          <div class="col-auto">
+            <button class="btn btn-outline-dark">Logout</button>
+          </div>
+        </div>
+      </form>
+      <% } %>
   </nav>
 </header>
