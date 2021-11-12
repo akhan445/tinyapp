@@ -8,23 +8,9 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
+const users = require('./data/userDB'); 
 
-const users = { 
-  "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
-  },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
-    password: "dishwasher-funk"
-  }
-};
+const urlDatabase = require('./data/urlDB'); 
 
 function findUserById(user_id) {
   for (const key in users) {
@@ -133,8 +119,9 @@ app.get('/logout', (req, res) => {
 });
 
 app.get('/urls', (req, res) => {
-  //username
-  // Buggy --> gives each user all urls in database
+  if (!req.cookies.user_id) {
+    res.redirect('/login')
+  }
   const templateVars = { 
     user: findUserById(req.cookies["user_id"]),
     urls: urlDatabase
@@ -147,10 +134,10 @@ app.post('/urls', (req, res) => {
     return res.status(401).send('Action not allowed');
   }
   const shortURL = generateRandomString();
-  const longURL = req.body.longURL
 
-  urlDatabase[shortURL] = longURL;
-
+  urlDatabase[shortURL] = {
+    longURL: req.body.longURL
+  };
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -165,13 +152,13 @@ app.get('/urls/new', (req, res) => {
 });
 
 app.get('/u/:shortURL', (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
 app.post('/urls/:shortURL/delete', (req, res) => {
   delete urlDatabase[req.params.shortURL];
-  //username
+  
   const templateVars = {
     user: findUserById(req.cookies["user_id"]),
     urls: urlDatabase
@@ -180,20 +167,30 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 });
 
 app.get('/urls/:shortURL', (req, res) => {
-  //username
+  if (!req.cookies.user_id) {
+    res.redirect('/login');
+  }
   const templateVars = {
-    user: findUserById(req.cookies["user_id"]),
+    user: findUserById(req.cookies.user_id),
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL]
+    longURL: urlDatabase[req.params.shortURL].longURL
   };
   res.render('urls_show', templateVars);
 });
 
 app.post('/urls/:shortURL', (req, res) => {
+  if (!req.cookies.user_id) {
+    res.redirect('/login');
+  }
+  
   const key = req.params.shortURL;
   const newURL = req.body.longURL;
-  urlDatabase[key] = newURL;
-  //username
+
+  // Add the new url to database which is where it is retrieved from 
+  urlDatabase[key] = {
+    longURL: newURL,
+    userID: req.cookies.user_id
+  }
   const templateVars = {
     user: findUserById(req.cookies["user_id"]),
     shortURL: key,
