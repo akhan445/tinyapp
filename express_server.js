@@ -67,11 +67,12 @@ app.get('/hello', (req, res) => {
 });
 
 app.get('/register', (req, res) => {
-  //username
-  const templateVars = {
-    user: req.cookies["user_id"],
-  };
-  res.render('urls_register', templateVars);
+  
+  if (req.cookies.user_id) {
+    res.redirect('/urls');
+  }
+
+  res.render('urls_register', { user: null });
 });
 
 app.post('/register', (req, res) => {
@@ -98,10 +99,10 @@ app.post('/register', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  // if there are no cookie data then there is no user logged in
-  if (!req.cookies.user_id) {
-    res.render('urls_login', {user: null});
+  if (req.cookies.user_id) {
+    res.redirect('/urls');
   }
+  
   res.render('urls_login', {user: null}); //change this to redirect urls
 });
 
