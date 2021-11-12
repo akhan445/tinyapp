@@ -9,7 +9,6 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
 const users = require('./data/userDB'); 
-
 const urlDatabase = require('./data/urlDB'); 
 
 function findUserById(user_id) {
@@ -40,16 +39,26 @@ function generateRandomString() {
   return shortURL;
 };
 
-app.get('/', (req, res) => {
-  res.send('Hello!');
-});
+function urlsForUser(user_id) {
+  let urls = {};
+  for (const key in urlDatabase) {
+    if (urlDatabase[key].userID === user_id) {
+      urls[key] = urlDatabase[key]
+    }
+  }
+  return urls;
+}
+
+// app.get('/', (req, res) => {
+//   res.send('Hello!');
+// });
+
+// app.get('/hello', (req, res) => {
+//   res.send('<html><body>Hello <b>World</b></body></html>\n');
+// });
 
 app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
-});
-
-app.get('/hello', (req, res) => {
-  res.send('<html><body>Hello <b>World</b></body></html>\n');
 });
 
 app.get('/register', (req, res) => {
@@ -92,7 +101,6 @@ app.get('/login', (req, res) => {
   res.render('urls_login', {user: null}); //change this to redirect urls
 });
 
-// needs refactoring, doesn;t check password
 app.post('/login', (req, res) => {
   //username
   const { email, password } = req.body;
@@ -120,15 +128,17 @@ app.get('/logout', (req, res) => {
 
 app.get('/urls', (req, res) => {
   if (!req.cookies.user_id) {
-    res.redirect('/login')
+    res.render('urls_index', { user: null , error: 'Login/Register to see the tiny urls!'});
   }
   const templateVars = { 
-    user: findUserById(req.cookies["user_id"]),
-    urls: urlDatabase
+    user: findUserById(req.cookies.user_id),
+    urls: urlsForUser(req.cookies.user_id),
+    error: null
   };
   res.render('urls_index', templateVars);
 });
 
+// edit url
 app.post('/urls', (req, res) => {
   if (!req.cookies.user_id) {
     return res.status(401).send('Action not allowed');
@@ -136,7 +146,8 @@ app.post('/urls', (req, res) => {
   const shortURL = generateRandomString();
 
   urlDatabase[shortURL] = {
-    longURL: req.body.longURL
+    longURL: req.body.longURL,
+    userID: req.cookies.user_id
   };
   res.redirect(`/urls/${shortURL}`);
 });
@@ -149,6 +160,7 @@ app.get('/urls/new', (req, res) => {
     user: findUserById(req.cookies["user_id"]),
   };
   res.render('urls_new', templateVars);
+  // res.redirect('/urls')
 });
 
 app.get('/u/:shortURL', (req, res) => {
@@ -157,30 +169,44 @@ app.get('/u/:shortURL', (req, res) => {
 });
 
 app.post('/urls/:shortURL/delete', (req, res) => {
-  delete urlDatabase[req.params.shortURL];
-  
+  if (!req.cookies.user_id || urlDatabase[req.params.shortURL].userID !== req.cookies.user_id) {
+    return res.status(401).send('Unauthorized action');
+  }
+
+  //   const userURLs = urlsForUser(req.cookies.user_id);
+  //   // find and delete from the user's url;s
+  //   if (Object.keys(userURLs).length !== 0) {
+  //     if (userURLs.hasOwnProperty(req.params.shortURL)) {
+  //     if (userURLs[req.params.shortURL].userID === req.cookies.user_id) {
+  //     }
+  //   }
+  // }
+delete urlDatabase[req.params.shortURL];
+
   const templateVars = {
     user: findUserById(req.cookies["user_id"]),
-    urls: urlDatabase
+    urls: urlsForUser(req.cookies.user_id) // get a fresh one after/if deletion has occured
   };
+
   res.render('urls_index', templateVars);
 });
 
 app.get('/urls/:shortURL', (req, res) => {
   if (!req.cookies.user_id) {
-    res.redirect('/login');
+    res.render('urls_show', { user: null, error: "Log in to view this page"});
   }
   const templateVars = {
     user: findUserById(req.cookies.user_id),
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL].longURL
+    longURL: urlDatabase[req.params.shortURL].longURL,
+    error: null
   };
   res.render('urls_show', templateVars);
 });
 
 app.post('/urls/:shortURL', (req, res) => {
-  if (!req.cookies.user_id) {
-    res.redirect('/login');
+  if (!req.cookies.user_id || urlDatabase[req.params.shortURL].userID !== req.cookies.user_id) {
+    return res.status(401).send('Unauthorized action');
   }
   
   const key = req.params.shortURL;
