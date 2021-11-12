@@ -82,10 +82,12 @@ app.post('/register', (req, res) => {
   } 
 
   const user_id = generateRandomString();
+  const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
   const user = {
     id: user_id,
     email: req.body.email,
-    password: req.body.password
+    password: hashedPassword
   };
 
   users[user_id] = user; 
@@ -114,8 +116,8 @@ app.post('/login', (req, res) => {
     return res.status(403).send('incorrect username or password');
   }
 
-  //valid email
-  if (data.password !== password) {
+  // if password don't match
+  if (!bcrypt.compareSync(password, data.password)) {
     return res.status(403).send('incorrect username or password');
   }
   res.cookie('user_id', data.id); // set the cookie
