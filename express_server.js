@@ -102,7 +102,7 @@ app.get('/login', (req, res) => {
   if (req.cookies.user_id) {
     res.redirect('/urls');
   }
-  
+
   res.render('urls_login', {user: null}); //change this to redirect urls
 });
 
@@ -143,6 +143,9 @@ app.get('/urls', (req, res) => {
 });
 
 app.post('/urls', (req, res) => {
+  if (!req.cookies.user_id) {
+    return res.status(401).send('Action not allowed');
+  }
   const shortURL = generateRandomString();
   const longURL = req.body.longURL
 
@@ -152,7 +155,9 @@ app.post('/urls', (req, res) => {
 });
 
 app.get('/urls/new', (req, res) => {
-  //username
+  if (!req.cookies.user_id) {
+    res.redirect('/login');
+  }
   const templateVars = {
     user: findUserById(req.cookies["user_id"]),
   };
