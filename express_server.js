@@ -35,14 +35,13 @@ function findUserById(user_id) {
   return null;
 }
 
-function emailAlreadyExists(email) {
+function getUserByEmail(email) {
   for (const key in users) {
-    console.log(users[key].email);
     if (users[key].email === email) {
-      return true;
+      return { data: users[key], error: null };
     }
   }
-  return false;
+  return { data: null, error: "User does not exist" };
 }
 function generateRandomString() {
   const validChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -79,9 +78,12 @@ app.post('/register', (req, res) => {
 
   if (!req.body.email || !req.body.password) {
     return res.status(400).send('email or password fields cannot be empty');
-  } else if (emailAlreadyExists(req.body.email)) {
-    return res.status(400).send('email already exists in user db');
   }
+  const { data, error } = getUserByEmail(req.body.email);
+  if (data) { // found a valid email
+    return res.status(400).send('email already exists in user db');
+  } 
+
   const user_id = generateRandomString();
   const user = {
     id: user_id,
@@ -95,17 +97,37 @@ app.post('/register', (req, res) => {
   res.redirect('/urls');
 });
 
-// needs refactoring
+app.get('/login', (req, res) => {
+  // if there are no cookie data then there is no user logged in
+  if (!req.cookies.user_id) {
+    res.render('urls_login', {user: null});
+  }
+  res.render('urls_login', {user: null}); //change this to redirect urls
+});
+
+// needs refactoring, doesn;t check password
 app.post('/login', (req, res) => {
   //username
-  const username = req.body.username;
-  res.cookie('username', username); // set the cookie
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).send('email or password fields cannot be empty');
+  }
+  const { data, error } = getUserByEmail(email);
+  if (error) {
+    return res.status(403).send('incorrect username or password');
+  }
+
+  //valid email
+  if (data.password !== password) {
+    return res.status(403).send('incorrect username or password');
+  }
+  res.cookie('user_id', data.id); // set the cookie
   res.redirect('/urls');
 });
 
-//needs refactoring
-app.post('/logout', (req, res) => {
-  res.clearCookie('username');
+app.get('/logout', (req, res) => {
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 

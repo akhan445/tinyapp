@@ -10,33 +10,14 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-    <% if (!user.email) { %>
-    <form action="/login" method="POST">
-      <div class="form-row align-items-center form-control-lg">
-        <div class="col-auto">
-        </div>
-        <div class="col-auto">
-          <input type="text" class="form-control" name="username" placeholder="username">
-        </div>
-        <div class="col-auto">
-          <button class="btn btn-outline-dark">Login</button>
-        </div>
-      </div>
-    </form>
+    <% if (!user) { %>
+      <a class="btn btn-light mx-2" href="/register" role="button">Register</a>
+      <a class="btn btn-primary mx-2" href="/login" role="button">Login</a>
     <% } else { %>
-      <form action="/logout" method="POST">
-        <div class="form-row align-items-center form-control-lg">
-          <div class="col-auto">
-          </div>
-          <div class="col-auto">
-            <label class="my-1 mr-2">Logged in as: <%= user.email %></label>
-            <!-- <input type="text" class="form-control" name="username" placeholder="username"> -->
-          </div>
-          <div class="col-auto">
-            <button class="btn btn-outline-dark">Logout</button>
-          </div>
-        </div>
-      </form>
+      <div>
+        Logged in as: <%= user.email %>
+        <a class="btn btn-outline-dark mx-2" href="/logout" role="button">Logout</a>
+      </div>
       <% } %>
   </nav>
 </header>
