@@ -14,37 +14,7 @@ app.use(cookieSession({
 
 const users = require('./data/userDB'); 
 const urlDatabase = require('./data/urlDB'); 
-const getUserByEmail = require('./helpers');
-
-function findUserById(user_id) {
-  for (const key in users) {
-    if (user_id === key) {
-      return users[key];
-    }
-  }
-  return null;
-}
-
-function generateRandomString() {
-  const validChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let shortURL = '';
-
-  for (let i = 0; i < 6; i++) {
-    const index = Math.floor(Math.random() * validChars.length);
-    shortURL += validChars.charAt(index);
-  }
-  return shortURL;
-};
-
-function urlsForUser(user_id) {
-  let urls = {};
-  for (const key in urlDatabase) {
-    if (urlDatabase[key].userID === user_id) {
-      urls[key] = urlDatabase[key]
-    }
-  }
-  return urls;
-}
+const { getUserByEmail, findUserById, generateRandomString, urlsForUser } = require('./helpers');
 
 app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
@@ -127,8 +97,8 @@ app.get('/urls', (req, res) => {
   }
   // data to be displayed on urls_index page
   const templateVars = { 
-    user: findUserById(req.session.user_id),
-    urls: urlsForUser(req.session.user_id),
+    user: findUserById(req.session.user_id, users),
+    urls: urlsForUser(req.session.user_id, urlDatabase),
     error: null
   };
   res.render('urls_index', templateVars);
@@ -155,7 +125,7 @@ app.get('/urls/new', (req, res) => {
     res.redirect('/login');
   }
   const templateVars = {
-    user: findUserById(req.session.user_id),
+    user: findUserById(req.session.user_id, users),
   };
 
   res.render('urls_new', templateVars);
@@ -175,8 +145,8 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   delete urlDatabase[req.params.shortURL];
 
   const templateVars = {
-    user: findUserById(req.session.user_id),
-    urls: urlsForUser(req.session.user_id), // get a fresh one after/if deletion has occured
+    user: findUserById(req.session.user_id, users),
+    urls: urlsForUser(req.session.user_id, urlDatabase), // get a fresh one after/if deletion has occured
     error: null
   };
 
@@ -188,7 +158,7 @@ app.get('/urls/:shortURL', (req, res) => {
     res.render('urls_show', { user: null, error: "Log in to view this page"});
   }
   const templateVars = {
-    user: findUserById(req.session.user_id),
+    user: findUserById(req.session.user_id, users),
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
     error: null
@@ -210,7 +180,7 @@ app.post('/urls/:shortURL', (req, res) => {
     userID: req.session.user_id
   }
   const templateVars = {
-    user: findUserById(req.session.user_id),
+    user: findUserById(req.session.user_id, users),
     shortURL: key,
     longURL: newURL
   };
