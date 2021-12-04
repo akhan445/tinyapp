@@ -19,7 +19,7 @@ const { getUserByEmail, findUserById, generateRandomString, urlsForUser } = requ
 // Redirect the user for home route
 app.get("/", (req, res) => {
   if (req.session.user_id) {
-    return res.redirect("/urls");
+    return res.redirect("/urls"); //if user is logged in render the urls index page
   }
   res.redirect("/login");
 });
@@ -55,7 +55,7 @@ app.post('/register', (req, res) => {
     password: hashedPassword
   };
 
-  users[user_id] = newUser; 
+  users[user_id] = newUser; // add user to database
 
   req.session.user_id = user_id; //set the cookie for the new user
   res.redirect('/urls');
@@ -96,12 +96,13 @@ app.get('/logout', (req, res) => {
   res.redirect('/urls');
 });
 
+// URLs index page 
 app.get('/urls', (req, res) => {
   // if user is not logged in, pass the error message to be displayed
   if (!req.session.user_id) {
     return res.render('urls_index', { user: null , error: 'Login/Register to see the tiny urls!'});
   }
-  // data to be displayed on urls_index page
+  // prepare data to be sent to be displayed on urls_index page
   const templateVars = { 
     user: findUserById(req.session.user_id, users),
     urls: urlsForUser(req.session.user_id, urlDatabase),
@@ -130,6 +131,7 @@ app.get('/urls/new', (req, res) => {
   if (!req.session.user_id) {
     return res.redirect('/login');
   }
+  // send the user information to page to be added to url when user creates new url
   const templateVars = {
     user: findUserById(req.session.user_id, users),
   };
@@ -137,11 +139,13 @@ app.get('/urls/new', (req, res) => {
   return res.render('urls_new', templateVars);
 });
 
+// tiny url link which redirects to long url site
 app.get('/u/:shortURL', (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
+// delete a tiny url
 app.post('/urls/:shortURL/delete', (req, res) => {
   if (!req.session.user_id || urlDatabase[req.params.shortURL].userID !== req.session.user_id) {
     return res.status(403).send('Unauthorized Access');
@@ -158,6 +162,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   res.render('urls_index', templateVars);
 });
 
+// Tiny url request handling for single tiny url page
 app.get('/urls/:shortURL', (req, res) => {
   if (!req.session.user_id) {
     return res.render('urls_show', { user: null, error: "Log in to view this page"});
@@ -182,6 +187,7 @@ app.get('/urls/:shortURL', (req, res) => {
   res.render('urls_show', templateVars);
 });
 
+// Post request for when user edits a url
 app.post('/urls/:shortURL', (req, res) => {
   if (!req.session.user_id || urlDatabase[req.params.shortURL].userID !== req.session.user_id) {
     return res.status(403).send('Unauthorized Access');

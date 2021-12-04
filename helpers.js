@@ -16,6 +16,7 @@ const findUserById = function (user_id, database) {
   return null;
 };
 
+// Generates a random string to be used for the tiny url 
 const generateRandomString = function () {
   const validChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let shortURL = '';
